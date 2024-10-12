@@ -1,0 +1,11 @@
+10x10x10 box "base" <-
+yz y 45 rot
+mir 
+"base" top ctr 10x5 drill
+
+--
+
+10x10x10 box "x" <-
+yz y 45 rot
+mir 
+"x" top ctr 10x5 drill
