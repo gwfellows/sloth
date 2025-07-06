@@ -4,15 +4,10 @@ FUNCTION = 1
 
 def box(stack):
     print("making box with", stack[-1])
-    return 1
+    return stack
 
 
-def make_vector(stack):
-    depth = int(stack[-1])
-    return stack[-depth - 1 : -1]
-
-
-functions = {"box": box, ",": make_vector}
+functions = {"box": box}
 
 
 def parse_literal(literal):
@@ -22,31 +17,49 @@ def parse_literal(literal):
         return float(literal)
 
 
-def tokenize(input):
-    tokens = []
-    for token in input.split():
-        if token in functions:
-            code, token = FUNCTION, functions[token]
-        else:
-            code, token = LITERAL, parse_literal(token)
-        tokens.append((code, token))
-    return tokens
+def tokenize(s):
+    tokens = s.replace("[", " [ ").replace("]", " ] ").split()
+
+    def parse_tokens(tokens):
+        result = []
+        while tokens:
+            token = tokens.pop(0)
+            if token == "[":
+                result.append(parse_tokens(tokens))
+            elif token == "]":
+                return result
+            else:
+                try:
+                    result.append(
+                        (FUNCTION, functions[token])
+                        if token in functions
+                        else (LITERAL, parse_literal(token))
+                    )  # int(token))
+                except ValueError:
+                    result.append(token)
+        return result
+
+    return parse_tokens(tokens)
 
 
-test = """
+test = '[1] [2] [[3] [4 [4 4 4]]] [1.5 [ 6 1 4] "blue"] box'
 
-1 2 3 3 , box
+# print(tokenize(test))
+# exit()
 
-"""
 
-def run(input):
+def run(tokens):
     stack = []
-    for token in tokenize(input):
-        if token[0] == LITERAL:
+    for token in tokens:
+        if isinstance(token, list):
+            stack.append(run(token))
+        elif token[0] == LITERAL:
             stack.append(token[1])
         elif token[0] == FUNCTION:
-            stack.append(token[1](stack))
+            stack = token[1](stack)
         print(stack)
+    return stack
 
 
-run(test)
+print(tokenize(test))
+run(tokenize(test))
